@@ -9,30 +9,44 @@ mod tests {
     fn full_test(input: &str, validity: bool, parsed: [u8;10], output: bool) {
         //! Test all functions for validating a pin number using knowns outputs
         //!
-        //! The input string is given to the validator and the result is compared to the given
-        //! validity.
+        //! The input string is given to the parser and the result is compared to the given
+        //! validity and parse result.
         //!
-        //! If the validity is expected to be false, the function will stop after the validity
-        //! check, otherwise it will continue
+        //! If the function is expected to return a parsed array it will be compared to `parsed`.
+        //! If the function is expected to return an Err then the test will fail if a parsed list
+        //! is returned.
         //!
-        //! The input is then given to [input::parse] and compared to [parsed]
-        //!
-        //! The parsed input is then given to [check:full] and the result is compared with [output]
+        //! The `parsed` is then given to [check::full] and the result is compared with `output`
         //!
         //! # Arguments
         //! * `input` a example user input string to run the validity and parser checks on
-        //! * `validity` expected output from [input::validate]
-        //! * `parsed` expected output from [input::parse]
-        //! * `output` expected output from [check:full]
+        //! * `validity` if the output from [input::parse] should be Ok or Err
+        //! * `parsed` expected output from [input::parse] if it is Ok. Ignored if `validity` is
+        //! set to false.
+        //! * `output` expected output from [check::full]. Ignored if `validity` is set to false
         //!
 
 
-        assert_eq!(input::validate(&input.to_string()), validity, "{} failed input validation", input);
+        if validity {
+            // Compare output to expected
+            assert_eq!(
+                input::parse(&input.to_string()),
+                Ok(parsed),
+                "{} didn't parse correctly", input
+                );
 
-        if !validity {return}
+        } else {
+            // Since the expected parsing result is that the input is invalid
+            // we will expect an error and panic otherwise
 
-        assert_eq!(input::parse(&input.to_string()), parsed, "{} failed parsing", input);
-        assert_eq!(check::full(parsed), output, "{} failed check", input);
+            let parsed = input::parse(&input.to_string()); // result from function call
+
+            // fail test if the function does not return an error
+            parsed.expect_err(format!("{} parsed wich shouldn't be possible", input).as_str());
+        }
+
+        // check the parsed input and compare result with `output`
+        assert_eq!(check::full(parsed), output, "{} got unexpected check result", input);
     }
 
     #[test]
@@ -72,10 +86,7 @@ mod tests {
             match line {
                 Err(_) => {}
                 Ok(pin) => {
-                    assert_eq!(input::validate(&pin), true, "{} failed validation", pin);
-
-                    let parsed = input::parse(&pin);
-
+                    let parsed = input::parse(&pin).expect(format!("{} failed with invalid format", pin).as_str());
                     assert_eq!(check::full(parsed), true, "{} failed check", pin);
                 }
             }
