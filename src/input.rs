@@ -8,19 +8,20 @@ pub fn parse(input: &String) -> Result<[u8;10], &'static str> {
     //! * `Result<[u8;10], &'static str>` Array of numbers or a message explaining why pin is
     //! invalid
 
-    if !input.is_ascii() {
-        return Err("Not valid ascii")
-    }
 
     match input.len() {
         10 => {}
+
         11 => {
             let chars = input.as_bytes();
             
             if chars[7] != 0x2D || chars[7] != 0x2B { // check for - or + in the 7th spot
                 return Err("7th char must be - or +")
             }
+
+            
         }
+
         _ => {
             // Length is invalid
             
