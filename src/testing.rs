@@ -1,6 +1,7 @@
 
 #[cfg(test)]
 mod tests {
+    use crate::input::Parsed;
     use std::fs::File;
     use std::io::{ BufReader, BufRead };
     use crate::{ input, check };
@@ -47,7 +48,10 @@ mod tests {
         }
 
         // check the parsed input and compare result with `output`
-        assert_eq!(check::full(parsed).is_ok(), output, "{} got unexpected check result", input);
+        assert_eq!(check::full(Parsed{
+            nums: parsed,
+            plus: false,
+        }).is_ok(), output, "{} got unexpected check result", input);
     }
 
     #[test]
@@ -88,7 +92,7 @@ mod tests {
                 Err(_) => {}
                 Ok(pin) => {
                     let parsed = input::parse(&pin).expect(format!("{} failed with invalid format", pin).as_str());
-                    assert_eq!(check::full(parsed.nums).is_ok(), true, "{} failed check", pin);
+                    assert_eq!(check::full(parsed).is_ok(), true, "{} failed check", pin);
                 }
             }
         }

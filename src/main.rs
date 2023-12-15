@@ -1,4 +1,5 @@
 use clap::Parser;
+use std::io;
 
 mod check;
 mod input;
@@ -26,19 +27,64 @@ struct Cli {
 }
 
 
+fn check_pin(pin: String) -> bool {
+
+    let parsed = input::parse(&pin);
+
+    if parsed.is_err() {
+        let reason = parsed.unwrap_err();
+        println!("x {} - {}", pin, reason);
+        return false
+    }
+
+    let checked = check::full(parsed.unwrap());
+
+    if checked.is_err() {
+        let reason = checked.unwrap_err();
+        println!("x {} - {}", pin, reason);
+        return false
+    }
+
+    println!("  {}", pin);
+
+    true
+}
+
 
 fn main() {
     let args = Cli::parse();
 
-    let input = args.input.unwrap_or("fuck you".to_string());
-    let parsed = input::parse(&input);
+    if args.input.is_some() {
+        let input = args.input.unwrap();
+        check_pin(input);
+        return;
+    }
 
-    match parsed {
-        Err(reason) => {panic!("{}", reason)},
-        Ok(result) => {
-            panic!("{}", check::full(result.nums).expect_err("Success"))
+    let stdin = io::stdin();
+    let mut valid = 0;
+    let mut invalid = 0;
+
+    loop {
+        let mut buffer = String::new();
+
+        match stdin.read_line(&mut buffer) {
+            Err(msg) => panic!("{}", msg),
+            Ok(0) => {
+                println!(
+                    "{} valid, {} invalid, {} total",
+                    valid, invalid, valid+invalid);
+                break;
+            },
+            Ok(_) => {
+                if check_pin(buffer.trim().to_string()) {
+                    valid += 1;
+                } else {
+                    invalid += 1;
+                }
+            }
         }
     }
+
 }
 
 
