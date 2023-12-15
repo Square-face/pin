@@ -30,7 +30,15 @@ struct Cli {
 fn main() {
     let args = Cli::parse();
 
-    if args.input.is_none() { unimplemented!(); }
+    let input = args.input.unwrap_or("fuck you".to_string());
+    let parsed = input::parse(&input);
+
+    match parsed {
+        Err(reason) => {panic!("{}", reason)},
+        Ok(result) => {
+            panic!("{}", check::full(result.nums).expect_err("Success"))
+        }
+    }
 }
 
 

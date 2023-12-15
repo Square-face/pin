@@ -29,11 +29,12 @@ mod tests {
 
         if validity {
             // Compare output to expected
-            assert_eq!(
-                input::parse(&input.to_string()),
-                Ok(parsed),
-                "{} didn't parse correctly", input
-                );
+            match input::parse(&input.to_string()) {
+                Err(reason) => panic!("{} failed to parse, {}", input, reason),
+                Ok(result) => {
+                    assert_eq!(result.nums, parsed)
+                }
+            }
 
         } else {
             // Since the expected parsing result is that the input is invalid
@@ -46,7 +47,7 @@ mod tests {
         }
 
         // check the parsed input and compare result with `output`
-        assert_eq!(check::full(parsed), output, "{} got unexpected check result", input);
+        assert_eq!(check::full(parsed).is_ok(), output, "{} got unexpected check result", input);
     }
 
     #[test]
@@ -87,7 +88,7 @@ mod tests {
                 Err(_) => {}
                 Ok(pin) => {
                     let parsed = input::parse(&pin).expect(format!("{} failed with invalid format", pin).as_str());
-                    assert_eq!(check::full(parsed), true, "{} failed check", pin);
+                    assert_eq!(check::full(parsed.nums).is_ok(), true, "{} failed check", pin);
                 }
             }
         }
