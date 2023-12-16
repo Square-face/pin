@@ -1,5 +1,5 @@
+use crate::utils::{ max_day, Pin, Parsed };
 
-use crate::input::Parsed;
 
 
 
@@ -14,7 +14,7 @@ use crate::input::Parsed;
 /// # Returns
 /// Ture if the month is valid
 /// False if it is not
-fn check_month(month: u8) -> Result<(), &'static str> {
+fn check_month(month: u32) -> Result<(), &'static str> {
 
     if month == 0 {
         Err("Month is 0")
@@ -31,54 +31,14 @@ fn check_month(month: u8) -> Result<(), &'static str> {
 
 
 
-/// Calculate the maximum possible day for a pin
-///
-/// Get the day count for the given month.
-/// The months april, june, september and november (4, 6, 9, 11) have 30 days
-/// All other months except february has 31 days
-///
-/// February has 28 days most years
-/// If the year is divisable by 4, its a leap year meaning february has 29 days. But not if the
-/// year is also divisable by 400, then its not longer a leap year
-///
-/// # Arguments
-/// * `month` The month to get day count for
-/// * `year` The year to use for leap year calculations
-///
-/// # returns
-/// The number of days in that month
-fn max_day(month:u8, year:u16) -> u8 {
-    
-    // 30 days in april, june, sep and nov
-    if [4, 6, 9, 11].contains(&month) {
-        return 30
-    }
-    
-    // of remaining only feb doesn't have 31 days
-    if month != 2 {
-        return 31
-    }
-
-    // years divisable by 400 can't be leap a year
-    if year % 400 == 0 {
-        return 28
-    }
-
-    // if the year is divisable by 4 its a leap year
-    if year % 4 == 0 {
-        return 29
-    }
-
-    // all other years are not leap years
-    28
-}
 
 
 
 
 /// Check if the day is possible given the month and year
-fn check_day(day:u8, month:u8, year: u16) -> Result<(), &'static str> {
-    let max = max_day(month, year);
+fn check_day(pin: Pin) -> Result<(), &'static str> {
+    let day = pin.date.day;
+    let max = max_day(pin.date.month, pin.date.year);
 
     if day > max {
         return if day > max+60 {
@@ -88,9 +48,7 @@ fn check_day(day:u8, month:u8, year: u16) -> Result<(), &'static str> {
             Err("Day to high for normal pin, to low for temporary")
 
         } else {
-            // temp number
             Ok(())
-
         }
     }
 
@@ -119,21 +77,15 @@ fn check_day(day:u8, month:u8, year: u16) -> Result<(), &'static str> {
 /// # Returns
 /// Ture if the date is valid 
 /// False if it is not
-fn date(pin:Parsed) -> Result<(), &'static str>{
-    let nums = pin.nums;
+fn date(pin: Pin) -> Result<(), &'static str>{
 
-    let year    = (nums[0]*10 + nums[1]) as u16 + 2000;
-    let month   = nums[2]*10 + nums[3];
-    let day     = nums[4]*10 + nums[5];
-
-
-    match check_month(month) {
+    match check_month(pin.date.month) {
         Err(reason) => return Err(reason),
         _ => {}
     }
 
 
-    match check_day(day, month, year as u16 + 2000) {
+    match check_day(pin) {
         Err(reason) => return Err(reason),
         _ => {}
     }
@@ -153,6 +105,7 @@ fn date(pin:Parsed) -> Result<(), &'static str>{
 /// true if the sum is divisable by 10.
 /// false if the sum is not divisable by 10.
 fn luhns(pin:[u8;10]) -> bool {
+    dbg!(pin);
 
     let multiples = [0, 2, 4, 6, 8, 1, 3, 5, 7, 9];
     let mut sum = 0;
@@ -179,7 +132,7 @@ fn luhns(pin:[u8;10]) -> bool {
 ///
 /// Ok with no value if the pin passed all the tests.
 /// Err with a string explaining witch test failed.
-pub fn full(pin:Parsed) -> Result<(), &'static str>{
+pub fn full(pin:Pin) -> Result<(), &'static str>{
 
     match date(pin) {
         Err(reason) => return Err(reason),

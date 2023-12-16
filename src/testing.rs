@@ -1,58 +1,63 @@
+use crate::utils::Parsed;
+use crate::{ input, check };
+
+/// Test all functions for validating a pin number using knowns outputs
+///
+/// The input string is given to the parser and the result is compared to the given
+/// validity and parse result.
+///
+/// If the function is expected to return a parsed array it will be compared to `parsed`.
+/// If the function is expected to return an Err then the test will fail if a parsed list
+/// is returned.
+///
+/// The `parsed` is then given to [check::full] and the result is compared with `output`
+///
+/// # Arguments
+/// * `input` a example user input string to run the validity and parser checks on
+/// * `validity` if the output from [input::parse] should be Ok or Err
+/// * `parsed` expected output from [input::parse] if it is Ok. Ignored if `validity` is
+/// set to false.
+/// * `output` expected output from [check::full]. Ignored if `validity` is set to false
+///
+fn full_test(input: &str, validity: bool, parsed: [u8;10], output: bool) {
+
+    let actual_parsed = input::parse(&input.to_string()); // result from function call
+
+    if !validity {
+        // Since the expected parsing result is that the input is invalid
+        // we will expect an error and panic otherwise
+
+        // fail test if the function does not return an error
+        actual_parsed.expect_err(format!("{} parsed wich shouldn't be possible", input).as_str());
+        return;
+    }
+
+    match actual_parsed {
+        Err(reason) => panic!("{} failed to parse, {}", input, reason),
+        Ok(result) => {
+            assert_eq!(result.nums, parsed)
+        }
+    }
+
+    // check the parsed input and compare result with `output`
+    assert_eq!(
+        check::full(
+            actual_parsed.unwrap()
+        ).is_ok(),
+        output,
+        "{} got unexpected check result", input);
+}
+
+
 
 #[cfg(test)]
 mod tests {
-    use crate::input::Parsed;
     use std::fs::File;
     use std::io::{ BufReader, BufRead };
     use crate::{ input, check };
+    use crate::testing::full_test;
     
 
-    fn full_test(input: &str, validity: bool, parsed: [u8;10], output: bool) {
-        //! Test all functions for validating a pin number using knowns outputs
-        //!
-        //! The input string is given to the parser and the result is compared to the given
-        //! validity and parse result.
-        //!
-        //! If the function is expected to return a parsed array it will be compared to `parsed`.
-        //! If the function is expected to return an Err then the test will fail if a parsed list
-        //! is returned.
-        //!
-        //! The `parsed` is then given to [check::full] and the result is compared with `output`
-        //!
-        //! # Arguments
-        //! * `input` a example user input string to run the validity and parser checks on
-        //! * `validity` if the output from [input::parse] should be Ok or Err
-        //! * `parsed` expected output from [input::parse] if it is Ok. Ignored if `validity` is
-        //! set to false.
-        //! * `output` expected output from [check::full]. Ignored if `validity` is set to false
-        //!
-
-
-        if validity {
-            // Compare output to expected
-            match input::parse(&input.to_string()) {
-                Err(reason) => panic!("{} failed to parse, {}", input, reason),
-                Ok(result) => {
-                    assert_eq!(result.nums, parsed)
-                }
-            }
-
-        } else {
-            // Since the expected parsing result is that the input is invalid
-            // we will expect an error and panic otherwise
-
-            let parsed = input::parse(&input.to_string()); // result from function call
-
-            // fail test if the function does not return an error
-            parsed.expect_err(format!("{} parsed wich shouldn't be possible", input).as_str());
-        }
-
-        // check the parsed input and compare result with `output`
-        assert_eq!(check::full(Parsed{
-            nums: parsed,
-            plus: false,
-        }).is_ok(), output, "{} got unexpected check result", input);
-    }
 
     #[test]
     fn known() {
@@ -112,15 +117,52 @@ mod tests {
         //!
 
         let path = "src/tests/mixed.txt";
-
-        let file = File::open(path).expect(format!("{} does not exist", path).as_str());
-        let mut reader = BufReader::new(file);
+        let file = File::open(path).expect(format!("{} not found", path).as_str());
+        let reader = BufReader::new(file);
         
+        // parse file contents
         for line in reader.lines() {
             match line {
                 Err(_) => {}
-                Ok(contents) => {
-                    dbg!(contents);
+                Ok(pin) => {
+                    // split line by spaces backwards
+                    let split = pin.rsplit_once("  ");
+
+                    if split.is_none() {
+                        continue;
+                    }
+
+
+                    let (pin, expected) = split.unwrap();
+
+                    
+                    match input::parse(&pin.to_string()){
+                        Err(reason) => {
+                            if expected == "invalid" {
+                                println!("{} failed to parse - {}", pin, reason);
+                            } else {
+                                panic!("{} failed to parse - {}", pin, reason);
+                            }
+                        }
+                        Ok(parsed) => {
+                            match check::full(parsed) {
+                                Err(reason) => {
+                                    if expected == "invalid" {
+                                        println!("{} failed check - {}", pin, reason);
+                                    } else {
+                                        panic!("{} failed check - {}", pin, reason);
+                                    }
+                                },
+                                Ok(()) => {
+                                    if expected == "valid" {
+                                        println!("{} succeded", pin);
+                                    } else {
+                                        panic!("{} should not be valid", pin);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

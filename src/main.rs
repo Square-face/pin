@@ -3,6 +3,7 @@ use std::io;
 
 mod check;
 mod input;
+mod utils;
 mod testing;
 
 
@@ -36,6 +37,7 @@ fn check_pin(pin: String) -> bool {
         println!("x {} - {}", pin, reason);
         return false
     }
+
 
     let checked = check::full(parsed.unwrap());
 
