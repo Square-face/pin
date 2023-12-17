@@ -55,37 +55,12 @@ mod tests {
     }
 
 
-    #[test]
-    fn file_all_valid() {
-        //! run tests on a file where all pins are known to be valid
-        //! 
-        //! The file must be formated with each line being a single pin
-        //!
-
-        let path = "src/tests/valid.txt";
-        let file = File::open(path).expect(format!("{} not found", path).as_str());
-        let reader = BufReader::new(file);
-        
-        // parse file contents
-        for line in reader.lines() {
-            match line {
-                Err(_) => {}
-                Ok(pin) => {
-                    let parsed = input::parse(&pin).expect(format!("{} failed with invalid format", pin).as_str());
-                    assert_eq!(check::full(parsed).is_ok(), true, "{} failed check", pin);
-                }
-            }
-        }
-    }
-    
-
 
     #[test]
     fn skatteverket() {
-        //! run tests on a file where all pins are known to be valid
+        //! run tests on files provided by skatteverket where all pins are known to be valid
         //! 
-        //! The file must be formated with each line being a single pin
-        //!
+        //! The files must be formated with each line being a single pin
 
         let path = "src/tests/skatteverket/*.txt";
 
