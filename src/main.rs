@@ -32,7 +32,7 @@ struct Cli {
 
     /// If results should be written in a machine friendly way
     #[arg(short, long, default_value_t = false)]
-    porsaline: bool,
+    porcelain: bool,
 }
 
 
@@ -63,7 +63,7 @@ fn invalid(pin: String, reason: &str, args: &Cli) {
 
    println!(
        "{}",
-       match args.porsaline {
+       match args.porcelain {
            true => {
                match args.reason {
                    true  => format!("! {:15} - {}", pin, reason),
@@ -85,7 +85,7 @@ fn invalid(pin: String, reason: &str, args: &Cli) {
 fn valid(pin: String, args: &Cli) {
    if !args.valid { return; }
 
-  match args.porsaline {
+  match args.porcelain {
        true  => println!("Y {}", pin),
        false => println!("{} is valid", pin),
    };
