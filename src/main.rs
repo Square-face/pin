@@ -1,4 +1,4 @@
-use clap::Parser;
+use clap::{ Parser, ArgAction };
 use std::io;
 
 mod check;
@@ -15,32 +15,36 @@ mod testing;
     about="cli tool for checking and generating swedish personal identity numbers",
 )]
 struct Cli {
-    /// Input string, leave empty to use stdin
+    /// Leave empty to use stdin
     input: Option<String>,
 
-    /// path to input file
-    #[arg(short, long)]
-    file: Option<String>,
+    /// Hide valid pins
+    #[arg(short, long, default_value_t = true, action=ArgAction::SetFalse)]
+    valid: bool,
 
-    /// path to output
-    #[arg(short, long)]
-    output: Option<String>,
+    /// Hide invalid pins
+    #[arg(short, long, default_value_t = true, action=ArgAction::SetFalse)]
+    invalid: bool,
 
-    /// If only invalid pins should be shown
-    #[arg(long, default_value_t=false)]
-    hide_valid: bool,
+    /// Hide reason for invalid pins
+    #[arg(short, long, default_value_t = true, action=ArgAction::SetFalse)]
+    reason: bool,
+
+    /// If results should be written in a machine friendly way
+    #[arg(short, long, default_value_t = false)]
+    porsaline: bool,
 }
 
 
 fn check_pin(
     pin: String,
-) -> Result<String, String> {
+) -> Result<(), &'static str> {
 
     let parsed = input::parse(&pin);
 
     if parsed.is_err() {
         let reason = parsed.unwrap_err();
-        return Err(format!("{:15} is invalid - {}", pin, reason));
+        return Err(reason);
     }
 
 
@@ -48,14 +52,39 @@ fn check_pin(
 
     if checked.is_err() {
         let reason = checked.unwrap_err();
-        return Err(format!("{:15} is invalid - {}", pin, reason));
+        return Err(reason);
     }
 
-    Ok(format!("{:15} is valid", pin))
+    Ok(())
 }
 
-fn output(msg: String) {
-    println!("{}", msg);
+fn invalid(pin: String, reason: &str, args: &Cli) {
+    if !args.invalid { return; }
+
+    if args.porsaline{
+        if args.reason {
+            println!("! {:15} - {}", pin, reason);
+        } else {
+            println!("! {}", pin);
+        }
+    } else {
+        if args.reason {
+            println!("{} is invalid - {}", pin, reason);
+        } else {
+            println!("{} is invalid", pin);
+        }
+    }
+}
+
+
+fn valid(pin: String, args: &Cli) {
+    if !args.valid { return; }
+
+    if args.porsaline {
+        println!("Y {}", pin);
+    } else {
+        println!("{} is valid", pin);
+    }
 }
 
 
@@ -63,21 +92,21 @@ fn main() {
     let args = Cli::parse();
 
     if args.input.is_some() {
-        let input = args.input.unwrap();
-        match check_pin(input) {
-            Ok(msg) => {
-                if !args.hide_valid {output(msg)}
+        let input = args.input.clone().unwrap();
+        match check_pin(input.clone()) {
+            Ok(()) => {
+                valid(input, &args)
             },
-            Err(msg) => {
-                output(msg)
+            Err(reason) => {
+                invalid(input, reason, &args)
             }
         }
         return;
     }
 
     let stdin = io::stdin();
-    let mut valid = 0;
-    let mut invalid = 0;
+    let mut valid_count = 0;
+    let mut invalid_count = 0;
 
     loop {
         let mut buffer = String::new();
@@ -87,18 +116,18 @@ fn main() {
             Ok(0) => {
                 println!(
                     "{} valid, {} invalid, {} total",
-                    valid, invalid, valid+invalid);
+                    valid_count, invalid_count, valid_count+invalid_count);
                 break;
             },
             Ok(_) => {
                 match check_pin(buffer.trim().to_string()) {
-                    Ok(msg) => {
-                        valid += 1;
-                        if !args.hide_valid {output(msg)}
+                    Ok(()) => {
+                        valid_count += 1;
+                        valid(buffer.trim().to_string(), &args)
                     },
-                    Err(msg) => {
-                        invalid += 1;
-                        output(msg)
+                    Err(reason) => {
+                        invalid_count += 1;
+                        invalid(buffer.trim().to_string(), reason, &args)
                     }
                 }
             }

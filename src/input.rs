@@ -1,4 +1,4 @@
-use crate::utils::{ Date, get_date, Parsed, Pin };
+use crate::utils::{ get_date, Pin };
 
 /// Convert a given slice of char codes to the numbers they represent.
 ///
@@ -11,7 +11,7 @@ use crate::utils::{ Date, get_date, Parsed, Pin };
 /// # Returns
 /// * `Result<Pin, &'static str>` Either a parsed Pin or a Err if any of the given
 /// chars weren't numbers
-fn parse_12(chars: Vec<char>, plus: bool) -> Result<Pin, &'static str> {
+fn parse_12(chars: Vec<char>) -> Result<Pin, &'static str> {
 
     // panic if `chars is not 10 long`
     assert_eq!(chars.len(), 12);
@@ -95,7 +95,7 @@ fn parse_10(chars: Vec<char>, plus: bool) -> Result<Pin, &'static str> {
 
     return Ok(Pin {
         nums: result,
-        plus: false,
+        plus,
         date: get_date(result, plus, None)
     })
 }
@@ -116,7 +116,7 @@ pub fn parse(input: &String) -> Result<Pin, &'static str> {
 
     return match chars.len() {
         10 => parse_10(chars, false),
-        12 => parse_12(chars, false),
+        12 => parse_12(chars),
 
         11 => {
             let div = chars.remove(6);
@@ -137,7 +137,7 @@ pub fn parse(input: &String) -> Result<Pin, &'static str> {
             }
 
 
-            parse_12(chars, false)
+            parse_12(chars)
         }
 
         _ => {

@@ -1,4 +1,3 @@
-use crate::utils::Parsed;
 use crate::{ input, check };
 
 /// Test all functions for validating a pin number using knowns outputs
