@@ -66,15 +66,15 @@ fn invalid(pin: String, reason: &str, args: &Cli) {
        match args.porcelain {
            true => {
                match args.reason {
-                   true  => format!("! {:15} - {}", pin, reason),
+                   true  => format!("! | {:^25} | {:15}", reason, pin),
                    false => format!("! {}", pin),
                }
            },
 
            false => {
                match args.reason {
-                   true  => format!("{} is invalid - {}", pin, reason),
-                   false => format!("{} is invalid", pin),
+                   true  => format!("{:20} is invalid - {}", pin, reason),
+                   false => format!("{:20} is invalid", pin),
                }
            }
        }
@@ -86,8 +86,14 @@ fn valid(pin: String, args: &Cli) {
    if !args.valid { return; }
 
   match args.porcelain {
-       true  => println!("Y {}", pin),
-       false => println!("{} is valid", pin),
+       true  => {
+           match args.reason {
+               true => println!("Y | {:25} | {}", "", pin),
+               false => println!("Y {}", pin),
+
+           }
+       },
+       false => println!("{:20} is valid", pin),
    };
 }
 
