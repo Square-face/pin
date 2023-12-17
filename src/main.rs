@@ -25,17 +25,22 @@ struct Cli {
     /// path to output
     #[arg(short, long)]
     output: Option<String>,
+
+    /// If only invalid pins should be shown
+    #[arg(long, default_value_t=false)]
+    hide_valid: bool,
 }
 
 
-fn check_pin(pin: String) -> bool {
+fn check_pin(
+    pin: String,
+) -> Result<String, String> {
 
     let parsed = input::parse(&pin);
 
     if parsed.is_err() {
         let reason = parsed.unwrap_err();
-        println!("x {} - {}", pin, reason);
-        return false
+        return Err(format!("{:15} is invalid - {}", pin, reason));
     }
 
 
@@ -43,13 +48,14 @@ fn check_pin(pin: String) -> bool {
 
     if checked.is_err() {
         let reason = checked.unwrap_err();
-        println!("x {} - {}", pin, reason);
-        return false
+        return Err(format!("{:15} is invalid - {}", pin, reason));
     }
 
-    println!("  {}", pin);
+    Ok(format!("{:15} is valid", pin))
+}
 
-    true
+fn output(msg: String) {
+    println!("{}", msg);
 }
 
 
@@ -58,7 +64,14 @@ fn main() {
 
     if args.input.is_some() {
         let input = args.input.unwrap();
-        check_pin(input);
+        match check_pin(input) {
+            Ok(msg) => {
+                if !args.hide_valid {output(msg)}
+            },
+            Err(msg) => {
+                output(msg)
+            }
+        }
         return;
     }
 
@@ -78,10 +91,15 @@ fn main() {
                 break;
             },
             Ok(_) => {
-                if check_pin(buffer.trim().to_string()) {
-                    valid += 1;
-                } else {
-                    invalid += 1;
+                match check_pin(buffer.trim().to_string()) {
+                    Ok(msg) => {
+                        valid += 1;
+                        if !args.hide_valid {output(msg)}
+                    },
+                    Err(msg) => {
+                        invalid += 1;
+                        output(msg)
+                    }
                 }
             }
         }

@@ -11,7 +11,7 @@ use crate::utils::{ Date, get_date, Parsed, Pin };
 /// # Returns
 /// * `Result<Pin, &'static str>` Either a parsed Pin or a Err if any of the given
 /// chars weren't numbers
-fn parse_12(chars: &[u8], plus: bool) -> Result<Pin, &'static str> {
+fn parse_12(chars: Vec<char>, plus: bool) -> Result<Pin, &'static str> {
 
     // panic if `chars is not 10 long`
     assert_eq!(chars.len(), 12);
@@ -19,35 +19,36 @@ fn parse_12(chars: &[u8], plus: bool) -> Result<Pin, &'static str> {
     // define array to store results in
     let mut result = [0;10];
 
-    for i in 2..12 {
-        let char = chars[i];
+    for i in 0..10 {
+        let char = chars[i+2];
+        let digit = char.to_digit(10);
 
-        if char > 0x39 || char < 0x30 { // 0x39 = '9' and 0x30 = '0'
-            return Err("Input was not all numbers");
-        }
-
-        // since the charcodes for numbers come one after another in increasing order
-        // i.e 0x30 = '0' 0x31 = '1', 0x32 = '2' etc, we can simply take the charcode minus 0x30 to
-        // get the integer it represents.
-        result[i-2] = char - 0x30;
+        match digit {
+            Some(dig) => result[i] = dig.try_into().unwrap(),
+            _ => return Err("Not all numbers")
+        };
     };
     
 
     // check the first 2 digits
-    let char = chars[0];
-    if char > 0x39 || char < 0x30 { 
-            return Err("Input was not all numbers");
-    }
-    let millenia = char - 0x30;
+    let digit = chars[0].to_digit(10);
 
-    let char = chars[1];
-    if char > 0x39 || char < 0x30 { 
-            return Err("Input was not all numbers");
-    }
-    let centry = char - 0x30;
+    let millenia: i32   = match digit {
+        Some(dig) => dig.try_into().unwrap(),
+        _ => return Err("Not all numbers")
+    };
+
+
+    let digit = chars[1].to_digit(10);
+
+    let centry: i32     = match digit {
+        Some(dig) => dig.try_into().unwrap(),
+        _ => return Err("Not all numbers")
+    };
+
 
     // OOxxxxxx-xxxx
-    let centry = (millenia*10 + centry) as i32;
+    let centry = millenia*10 + centry;
 
     return Ok(Pin {
         nums: result,
@@ -74,7 +75,7 @@ fn parse_12(chars: &[u8], plus: bool) -> Result<Pin, &'static str> {
 /// # Returns
 /// * `Result<Pin, &'static str>` Either a parsed Pin or a Err if any of the given
 /// chars weren't numbers
-fn parse_10(chars: &[u8], plus: bool) -> Result<Pin, &'static str> {
+fn parse_10(chars: Vec<char>, plus: bool) -> Result<Pin, &'static str> {
 
     // panic if `chars is not 10 long`
     assert_eq!(chars.len(), 10);
@@ -84,17 +85,13 @@ fn parse_10(chars: &[u8], plus: bool) -> Result<Pin, &'static str> {
 
     for i in 0..10 {
         let char = chars[i];
+        let digit = char.to_digit(10);
 
-        if char > 0x39 || char < 0x30 { // 0x39 = '9' and 0x30 = '0'
-            return Err("Input was not all numbers");
-        }
-
-        // since the charcodes for numbers come one after another in increasing order
-        // i.e 0x30 = '0' 0x31 = '1', 0x32 = '2' etc, we can simply take the charcode minus 0x30 to
-        // get the integer it represents.
-        result[i] = char - 0x30;
+        match digit {
+            Some(dig) => result[i] = dig.try_into().unwrap(),
+            _ => return Err("Not all numbers")
+        };
     };
-
 
     return Ok(Pin {
         nums: result,
@@ -115,34 +112,32 @@ fn parse_10(chars: &[u8], plus: bool) -> Result<Pin, &'static str> {
 /// * `Result<[u8;10], &'static str>` Array of numbers or a message explaining why pin is
 /// invalid
 pub fn parse(input: &String) -> Result<Pin, &'static str> {
+    let mut chars = input.chars().collect::<Vec<char>>();
 
-
-    return match input.len() {
-        10 => parse_10(input.as_bytes(), false),
-        12 => parse_12(input.as_bytes(), false),
+    return match chars.len() {
+        10 => parse_10(chars, false),
+        12 => parse_12(chars, false),
 
         11 => {
-            let chars = input.as_bytes();
+            let div = chars.remove(6);
             
-            if chars[6] != 0x2D && chars[6] != 0x2B { // check for - or + in the 7th spot
+            if div != '-' && div != '+' { // check for - or + in the 7th spot
                 return Err("7th char must be - or +")
             }
 
-            let concated = [&chars[..6], &chars[7..]].concat();
 
-            parse_10(&concated, chars[6] == 0x2B)
+            parse_10(chars, div == '+')
         }
 
         13 => {
-            let chars = input.as_bytes();
+            let div = chars.remove(8);
 
-            if chars[8] != 0x2D { // since we are given the full year, plus can't be used
+            if div != '-' { // since we are given the full year, plus can't be used
                 return Err("9th char must be -")
             }
 
-            let concated = [&chars[..8], &chars[9..]].concat();
 
-            parse_12(&concated, chars[8] == 0x2B)
+            parse_12(chars, false)
         }
 
         _ => {

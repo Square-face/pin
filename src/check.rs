@@ -20,7 +20,7 @@ fn check_month(month: u32) -> Result<(), &'static str> {
         Err("Month is 0")
 
     } else if month > 12 {
-        Err("Month is over 12")
+        Err("Month over 12")
 
     } else { // valid month
         Ok(())
@@ -42,10 +42,10 @@ fn check_day(pin: Pin) -> Result<(), &'static str> {
 
     if day > max {
         return if day > max+60 {
-            Err("Day over maximum")
+            Err("Day invalid")
 
         } else if day < 61 {
-            Err("Day to high for normal pin, to low for temporary")
+            Err("Day invalid")
 
         } else {
             Ok(())
@@ -105,7 +105,6 @@ fn date(pin: Pin) -> Result<(), &'static str>{
 /// true if the sum is divisable by 10.
 /// false if the sum is not divisable by 10.
 fn luhns(pin:[u8;10]) -> bool {
-    dbg!(pin);
 
     let multiples = [0, 2, 4, 6, 8, 1, 3, 5, 7, 9];
     let mut sum = 0;
@@ -140,7 +139,7 @@ pub fn full(pin:Pin) -> Result<(), &'static str>{
     }
 
     if !luhns(pin.nums) {
-        return Err("Failed luhns")
+        return Err("Luhns")
     }
 
     Ok(())
