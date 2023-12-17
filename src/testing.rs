@@ -23,6 +23,7 @@ mod tests {
     /// set to false.
     /// * `output` expected output from [check::full]. Ignored if `validity` is set to false
     ///
+    #[allow(dead_code)]
     fn full_test(input: &str, validity: bool, parsed: [u8;10], output: bool) {
 
         let actual_parsed = input::parse(&input.to_string()); // result from function call

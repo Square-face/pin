@@ -59,33 +59,38 @@ fn check_pin(
 }
 
 fn invalid(pin: String, reason: &str, args: &Cli) {
-    if !args.invalid { return; }
+   if !args.invalid { return; }
 
-    if args.porsaline{
-        if args.reason {
-            println!("! {:15} - {}", pin, reason);
-        } else {
-            println!("! {}", pin);
-        }
-    } else {
-        if args.reason {
-            println!("{} is invalid - {}", pin, reason);
-        } else {
-            println!("{} is invalid", pin);
-        }
-    }
+   println!(
+       "{}",
+       match args.porsaline {
+           true => {
+               match args.reason {
+                   true  => format!("! {:15} - {}", pin, reason),
+                   false => format!("! {}", pin),
+               }
+           },
+
+           false => {
+               match args.reason {
+                   true  => format!("{} is invalid - {}", pin, reason),
+                   false => format!("{} is invalid", pin),
+               }
+           }
+       }
+   );
 }
 
 
 fn valid(pin: String, args: &Cli) {
-    if !args.valid { return; }
+   if !args.valid { return; }
 
-    if args.porsaline {
-        println!("Y {}", pin);
-    } else {
-        println!("{} is valid", pin);
-    }
+  match args.porsaline {
+       true  => println!("Y {}", pin),
+       false => println!("{} is valid", pin),
+   };
 }
+
 
 
 fn main() {
