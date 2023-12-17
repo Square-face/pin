@@ -100,7 +100,7 @@ mod tests {
                 Err(_) => {}
                 Ok(pin) => {
                     // split line by spaces backwards
-                    let split = pin.rsplit_once("  ");
+                    let split = pin.split_once("  ");
 
                     if split.is_none() {
                         continue;
@@ -112,7 +112,7 @@ mod tests {
                     
                     match input::parse(&pin.to_string()){
                         Err(reason) => {
-                            if expected == "invalid" {
+                            if expected == "!" {
                                 println!("{} failed to parse - {}", pin, reason);
                             } else {
                                 panic!("{} failed to parse - {}", pin, reason);
@@ -121,14 +121,14 @@ mod tests {
                         Ok(parsed) => {
                             match check::full(parsed) {
                                 Err(reason) => {
-                                    if expected == "invalid" {
+                                    if expected == "!" {
                                         println!("{} failed check - {}", pin, reason);
                                     } else {
                                         panic!("{} failed check - {}", pin, reason);
                                     }
                                 },
                                 Ok(()) => {
-                                    if expected == "valid" {
+                                    if expected == "Y" {
                                         println!("{} succeded", pin);
                                     } else {
                                         panic!("{} should not be valid", pin);

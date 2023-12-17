@@ -30,6 +30,10 @@ struct Cli {
     #[arg(short, long, default_value_t = true, action=ArgAction::SetFalse)]
     reason: bool,
 
+    /// Hide final line displaying totals
+    #[arg(short, long, default_value_t = true, action=ArgAction::SetFalse)]
+    count: bool,
+
     /// If results should be written in a machine friendly way
     #[arg(short, long, default_value_t = false)]
     porcelain: bool,
@@ -125,9 +129,11 @@ fn main() {
         match stdin.read_line(&mut buffer) {
             Err(msg) => panic!("{}", msg),
             Ok(0) => {
-                println!(
-                    "{} valid, {} invalid, {} total",
-                    valid_count, invalid_count, valid_count+invalid_count);
+                if args.count{
+                    println!(
+                        "{} valid, {} invalid, {} total",
+                        valid_count, invalid_count, valid_count+invalid_count);
+                }
                 break;
             },
             Ok(_) => {
