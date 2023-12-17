@@ -1,12 +1,7 @@
 use chrono::prelude::*;
 
 
-#[derive(Debug, Clone, Copy)]
-pub struct Parsed {
-    pub nums: [u8;10],
-    pub plus: bool,
-}
-
+/// Represents the date a pin is for
 #[derive(Debug, Clone, Copy)]
 pub struct Date {
     pub day: u32,
@@ -14,6 +9,8 @@ pub struct Date {
     pub year: i32,
 }
 
+
+/// Represents a fully parsed pin
 #[derive(Debug, Clone, Copy)]
 pub struct Pin {
     pub nums: [u8;10],
@@ -71,6 +68,19 @@ pub fn max_day(month:u32, year:i32) -> u32 {
     28
 }
 
+
+/// Use the current year to calculate a resonable guess for the year the pin is refrencing.
+///
+/// If decade year in the pin is more than the current decade. The centry must be 100 less than
+/// what it is now. i.e if the current year is 2023 and `syear` is 24, the pin year must be 1924.
+///
+/// # Arguments
+/// * `syear` The decade given by the first 2 numbers of the pin
+/// * `month` The month given by the 3rd and 4th numbers of the pin
+/// * `day` The day given by the 5th and 6th numbers of the pin
+///
+/// # Returns
+/// A full year, for example `2023`
 fn get_year(syear: i32, month:u32, day:u32) -> i32 {
 
     // get current time
@@ -101,18 +111,40 @@ fn get_year(syear: i32, month:u32, day:u32) -> i32 {
     return year;
 }
 
+
+
+
+
+
+
+/// Calculate all date information for a pin
+///
+/// If a centry is given the plus flag is ignored as it would make no sense to, for example, take
+/// 2006 - 100 = 1906 if the plus flag was set with the centry being given as 2000
+///
+/// # Arguments
+/// * `nums` Array representing a pin
+/// * `plus` Flag indicating if the year should be reduced by 100
+/// * `centry` Optional value if the years centry is also known
+///
+/// # Returns
+/// Date object
 pub fn get_date(nums: [u8;10], plus: bool, centry: Option<i32>) -> Date {
 
+    // Get date info from pin numbers
     let decade  = (nums[0]*10 + nums[1]) as i32; // OOxxxx-xxxx
     let month   = (nums[2]*10 + nums[3]) as u32; // xxOOxx-xxxx
     let day     = (nums[4]*10 + nums[5]) as u32; // xxxxOO-xxxx
 
-    let year = if centry.is_some() {
-        centry.unwrap()*100 + decade
-    } else {
-        get_year(decade, month, day) - 100*(plus as i32)
+
+    // if a known centry was supplied, use it
+    // otherwise, calculate resonable guess based on nums and plus flag
+    let year = match centry {
+        Some(centry) => centry*100 + decade,
+        None => get_year(decade, month, day) - 100*(plus as i32)
     };
 
+    // return date struct
     Date {
         year,
         month,
