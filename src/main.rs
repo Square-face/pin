@@ -15,7 +15,7 @@ mod testing;
     about="cli tool for checking and generating swedish personal identity numbers",
 )]
 struct Cli {
-    /// Leave empty to use stdin
+    /// Omit to use stdin
     input: Option<String>,
 
     /// Hide valid pins
