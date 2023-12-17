@@ -2,6 +2,7 @@
 #[cfg(test)]
 mod tests {
     use std::fs::File;
+    use glob::glob;
     use std::io::{ BufReader, BufRead };
     use crate::{ input, check };
     
@@ -72,6 +73,37 @@ mod tests {
                 Ok(pin) => {
                     let parsed = input::parse(&pin).expect(format!("{} failed with invalid format", pin).as_str());
                     assert_eq!(check::full(parsed).is_ok(), true, "{} failed check", pin);
+                }
+            }
+        }
+    }
+    
+
+
+    #[test]
+    fn skatteverket() {
+        //! run tests on a file where all pins are known to be valid
+        //! 
+        //! The file must be formated with each line being a single pin
+        //!
+
+        let path = "src/tests/skatteverket/*.txt";
+
+        for entry in glob(path).expect("Failed to get files") {
+            if let Ok(path) = entry {
+
+                let file = File::open(path.clone()).expect(format!("{} not found", path.display()).as_str());
+                let reader = BufReader::new(file);
+                
+                // parse file contents
+                for line in reader.lines() {
+                    match line {
+                        Err(_) => {}
+                        Ok(pin) => {
+                            let parsed = input::parse(&pin).expect(format!("{} failed with invalid format", pin).as_str());
+                            assert_eq!(check::full(parsed).is_ok(), true, "{} failed check", pin);
+                        }
+                    }
                 }
             }
         }
