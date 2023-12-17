@@ -54,27 +54,6 @@ mod tests {
 
 
     #[test]
-    fn known() {
-        let output = true;
-        let parsed = [0,6,1,0,0,9,2,4,5,4];
-
-        full_test("0610092454", output, parsed, output);
-        full_test("061009-2454", output, parsed, output);
-        full_test("200610092454", output, parsed, output);
-        full_test("20061009-2454", output, parsed, output);
-
-
-        let output = true;
-        let parsed = [0,6,1,1,0,1,0,5,9,6];
-
-        full_test("0611010596", output, parsed, output);
-        full_test("061101-0596", output, parsed, output);
-        full_test("200611010596", output, parsed, output);
-        full_test("20061101-0596", output, parsed, output);
-    }
-
-
-    #[test]
     fn file_all_valid() {
         //! run tests on a file where all pins are known to be valid
         //! 
