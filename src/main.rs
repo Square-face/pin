@@ -46,19 +46,21 @@ fn check_pin(
 
     let parsed = input::parse(&pin);
 
-    if parsed.is_err() {
-        let reason = parsed.unwrap_err();
+    // Check if pin has valid format
+    if let Err(reason) = parsed {
         return Err(reason);
     }
 
 
     let checked = check::full(parsed.unwrap());
 
-    if checked.is_err() {
-        let reason = checked.unwrap_err();
+    // Check if pin is valid
+    if let Err(reason) = checked {
         return Err(reason);
     }
 
+
+    // All good
     Ok(())
 }
 
